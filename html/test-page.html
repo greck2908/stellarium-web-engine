@@ -5,7 +5,6 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script src="static/js/polyfill.js"></script>
-<script src="static/js/stellarium-web-engine.js"></script>
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet">
@@ -158,54 +157,6 @@
   </div>
 </script>
 
-<script>
-  Vue.component('stel-photoitem', {
-    template: '#stel-photoitem-template',
-    props: ['url', 'thumbnail', 'calibrationUrl', 'name'],
-    data: function() {
-      return {
-        obj: null,
-        layer: stel.createLayer({z: 7, visible: true}),
-      }
-    },
-    computed: {
-      visible: function() { return this.obj && this.obj.visible },
-    },
-    watch: {
-      visible: function(val) {
-        if (val) {
-          this.obj.update()
-            stel.core.lookat(this.obj.azalt)
-        }
-      }
-    },
-    methods: {
-      toggleVisible: function() {
-        var that = this
-          if (!this.obj) {
-            $.ajax({
-              url: this.calibrationUrl,
-              dataType: "json"
-            }).done(function(data) {
-              that.obj = that.layer.add('photo', {
-                url: that.url,
-                calibration: data,
-                visible: true,
-              })
-            })
-            if (!this.obj) return;
-          } else {
-            this.obj.visible = !this.obj.visible
-          }
-      },
-      toggleShape: function() {
-        if (!this.obj) return
-        this.obj.render_shape = !this.obj.render_shape
-      }
-    }
-  })
-</script>
-
 <script type="text/x-template" id="stel-progressbars-template">
   <div>
     <p>BARS:</p>
@@ -272,7 +223,8 @@
   </div>
 </script>
 
-<script>
+<script type="module">
+  import StelWebEngine from '/static/js/stellarium-web-engine.js'
   var stel = StelWebEngine({
     wasmFile: "static/js/stellarium-web-engine.wasm",
     canvas: document.getElementById('stel-canvas'),
@@ -416,6 +368,51 @@
     }
   })
 
+  Vue.component('stel-photoitem', {
+    template: '#stel-photoitem-template',
+    props: ['url', 'thumbnail', 'calibrationUrl', 'name'],
+    data: function() {
+      return {
+        obj: null,
+        layer: stel.createLayer({z: 7, visible: true}),
+      }
+    },
+    computed: {
+      visible: function() { return this.obj && this.obj.visible },
+    },
+    watch: {
+      visible: function(val) {
+        if (val) {
+          this.obj.update()
+            stel.core.lookat(this.obj.azalt)
+        }
+      }
+    },
+    methods: {
+      toggleVisible: function() {
+        var that = this
+          if (!this.obj) {
+            $.ajax({
+              url: this.calibrationUrl,
+              dataType: "json"
+            }).done(function(data) {
+              that.obj = that.layer.add('photo', {
+                url: that.url,
+                calibration: data,
+                visible: true,
+              })
+            })
+            if (!this.obj) return;
+          } else {
+            this.obj.visible = !this.obj.visible
+          }
+      },
+      toggleShape: function() {
+        if (!this.obj) return
+        this.obj.render_shape = !this.obj.render_shape
+      }
+    }
+  })
 </script>
 
 <!-- For touch event debug simulation -->
