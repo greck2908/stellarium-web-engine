@@ -14,6 +14,11 @@
 
 #ifndef _GNU_SOURCE
 #   define _GNU_SOURCE
+#   define _Float32 float
+#   define _Float64 double
+#   define _Float128 long double
+#   define _Float32x float
+#   define _Float64x double
 #endif
 
 #include <assert.h>
