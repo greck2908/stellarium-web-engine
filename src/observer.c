@@ -8,6 +8,7 @@
  */
 
 #include "observer.h"
+#include "zlib.h"
 #include "swe.h"
 
 static void update_matrices(observer_t *obs)
@@ -73,24 +74,21 @@ static void update_matrices(observer_t *obs)
     mat3_to_mat4(re2v, obs->re2v);
 }
 
-static void observer_compute_hash(observer_t *obs, uint64_t* hash_partial,
-                                  uint64_t* hash)
+static void observer_compute_hash(observer_t *obs, uint32_t* hash_partial,
+                                  uint32_t* hash)
 {
-    uint64_t v = 0;
-    #define H(a) v = crc64(v, &obs->a, sizeof(obs->a))
-    H(elong);
-    H(phi);
-    H(hm);
-    H(horizon);
-    H(pressure);
-    H(refraction);
-    *hash_partial = v;
-    H(altitude);
-    H(azimuth);
-    H(roll);
-    H(tt);
-    #undef H
-    *hash = v;
+    uLong v = 1L;
+    // elong, phi, hm, horizon, pressure, refraction;
+    uint32_t len = (uint32_t)((uint8_t*)&obs->altitude -
+                              (uint8_t*)&obs->elong);
+    v = adler32(v, (const Bytef*)&obs->elong, len);
+    *hash_partial = v & 0xffffffff;
+
+    // altitude, azimuth, roll, tt
+    len = (uint32_t)((uint8_t*)&obs->ut1 -
+                     (uint8_t*)&obs->altitude);
+    v = adler32(v, (const Bytef*)&obs->altitude, len);
+    *hash = v & 0xffffffff;
 }
 
 void observer_update(observer_t *obs, bool fast)
@@ -99,7 +97,7 @@ void observer_update(observer_t *obs, bool fast)
     double dt, dut1 = 0;
     double p[3] = {0};
 
-    uint64_t hash, hash_partial;
+    uint32_t hash, hash_partial;
     observer_compute_hash(obs, &hash_partial, &hash);
     // Check if we have computed accurate positions already
     if (hash == obs->hash_accurate)

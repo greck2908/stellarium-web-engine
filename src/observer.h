@@ -20,6 +20,11 @@
 struct observer
 {
     obj_t  obj;
+
+    // This members define the state of the observer
+    // Do not add new variable between them if they don't contribute to the
+    // state of the observer.
+    // -- State Start --
     double elong;       // Observer longitude
     double phi;         // Observer latitude
     double hm;          // height above ellipsoid (m)
@@ -27,9 +32,20 @@ struct observer
     double pressure;    // Set to NAN to compute it from the altitude.
     bool   refraction;  // Whether we use refraction or not.
 
+    // State partial: changing one of the following values only enable
+    // to use the fast update method.
     double altitude;
     double azimuth;
     double roll;
+
+    // TT time in MJD
+    double tt;
+    // -- State stop --
+
+    // Different times, all in MJD, they must be consistent with tt
+    double ut1;
+    double utc;
+
     obj_t  *city;
 
     double last_update;
@@ -38,21 +54,16 @@ struct observer
     // Hash value that represents a given observer state for which the accurate
     // values have been computed. Used to prevent updating object data several
     // times with the same observer.
-    uint64_t hash_accurate;
+    uint32_t hash_accurate;
 
     // Hash value that represents the last observer state for which the
     // values have been computed. Used to prevent updating object data several
     // times with the same observer.
-    uint64_t hash;
+    uint32_t hash;
 
     // Hash of a partial state of the observer. If it is unchanged, it is
     // safe to use make fast update.
-    uint64_t hash_partial;
-
-    // Different times, all in MJD.
-    double tt;
-    double ut1;
-    double utc;
+    uint32_t hash_partial;
 
     double eo;  // Equation of origin.
     eraASTROM astrom;
